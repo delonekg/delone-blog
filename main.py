@@ -1,3 +1,4 @@
+from ast import Add
 from functools import wraps
 from re import U
 from tabnanny import check
@@ -9,7 +10,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import relationship
 from flask_login import UserMixin, login_user, LoginManager, login_required, current_user, logout_user
-from forms import CreatePostForm, CreateRegisterForm, CreateLoginForm, CommentForm
+from forms import CreatePostForm, CreateRegisterForm, CreateLoginForm, CommentForm, AddAdminForm
 from flask_gravatar import Gravatar
 from datetime import date
 import os
@@ -32,6 +33,7 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(100), unique=True)
     password = db.Column(db.String(100))
     name = db.Column(db.String(100))
+    level = db.Column(db.String, nullable=True)
     posts = relationship("BlogPost", back_populates="author")
     comments = relationship("Comment", back_populates="comment_author")
 
@@ -86,10 +88,21 @@ def load_user(user_id):
 def admin_only(func):
     @wraps(func)
     def decorated_function(*args, **kwargs):
-        if current_user.id != 1:
+        if current_user.level != "admin":
             return abort(403)
         
         return func(*args, **kwargs)
+    return decorated_function
+
+
+def owner_only(func):
+    @wraps(func)
+    def decorated_function(*args, **kwargs):
+        if current_user.id != 1:
+            return abort(403)
+
+        return func(*args, **kwargs)
+
     return decorated_function
 
 
@@ -236,6 +249,24 @@ def delete_post(post_id):
     db.session.delete(post_to_delete)
     db.session.commit()
     return redirect(url_for('get_all_posts'))
+
+
+@app.route("/add-admin", methods=["GET", "POST"])
+@owner_only
+def add_admin():
+
+    form = AddAdminForm()
+
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+
+        if user:
+            user.level = "admin"
+            return redirect(url_for("get_all_posts"))
+        else:
+            flash("The user you entered does not exist! Please try again.")
+
+    return render_template("add-admin.html", form=form)
 
 
 if __name__ == "__main__":
