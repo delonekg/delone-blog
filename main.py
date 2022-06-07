@@ -262,6 +262,7 @@ def add_admin():
 
         if user:
             user.level = "admin"
+            db.session.commit()
             return redirect(url_for("get_all_posts"))
         else:
             flash("The user you entered does not exist! Please try again.")
