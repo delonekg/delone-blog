@@ -16,12 +16,12 @@ from datetime import date
 import os
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY")
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 ckeditor = CKEditor(app)
 Bootstrap(app)
 
 ##CONNECT TO DB
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL")
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
@@ -32,8 +32,8 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(100), unique=True)
     password = db.Column(db.String(100))
-    name = db.Column(db.String(100))
     level = db.Column(db.String, nullable=True)
+    name = db.Column(db.String(100))
     posts = relationship("BlogPost", back_populates="author")
     comments = relationship("Comment", back_populates="comment_author")
 
@@ -254,18 +254,15 @@ def delete_post(post_id):
 @app.route("/add-admin", methods=["GET", "POST"])
 @owner_only
 def add_admin():
-
     form = AddAdminForm()
-
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
-
+        
         if user:
             user.level = "admin"
             db.session.commit()
-            return redirect(url_for("get_all_posts"))
-        else:
-            flash("The user you entered does not exist! Please try again.")
+
+            return redirect(url_for('get_all_posts'))
 
     return render_template("add-admin.html", form=form)
 
