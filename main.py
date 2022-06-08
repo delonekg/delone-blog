@@ -87,7 +87,7 @@ def load_user(user_id):
 def admin_only(func):
     @wraps(func)
     def decorated_function(*args, **kwargs):
-        if current_user.level != "admin":
+        if current_user.id != 1:
             return abort(403)
         
         return func(*args, **kwargs)
