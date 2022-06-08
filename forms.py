@@ -29,7 +29,4 @@ class CreateLoginForm(FlaskForm):
 class CommentForm(FlaskForm):
     comment = CKEditorField("Comment")
     submit = SubmitField("Submit comment.")
-
-class AddAdminForm(FlaskForm):
-    email = StringField("Email", validators=[DataRequired(), Email()])
-    submit = SubmitField("Log me in!")
+    
